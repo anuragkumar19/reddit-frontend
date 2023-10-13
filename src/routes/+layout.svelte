@@ -2,7 +2,7 @@
 	import axios from 'axios'
 	import '../app.postcss'
 	import type { LayoutServerData } from './$types'
-	import { Toast, getToastStore, initializeStores } from '@skeletonlabs/skeleton'
+	import { Modal, Toast, getToastStore, initializeStores } from '@skeletonlabs/skeleton'
 	import { PUBLIC_BASE_URL } from '$env/static/public'
 	import { browser } from '$app/environment'
 	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query'
@@ -25,6 +25,7 @@
 </script>
 
 <Toast />
+<Modal />
 <QueryClientProvider client={queryClient}>
 	<slot />
 </QueryClientProvider>

@@ -1,13 +1,17 @@
-<!-- <script lang="ts">
+<script lang="ts">
+	import { onError } from '$lib/api/common'
+	import type {
+		AxiosApiError,
+		MessageResponse,
+		UpdateAvatarBody,
+		UpdateNameBody,
+		UpdateUsernameBody,
+	} from '$lib/api/types'
+	import { updateNameSchema, updateUsernameSchema } from '$lib/validations/zod'
 	import { FileButton, getToastStore } from '@skeletonlabs/skeleton'
+	import { createMutation } from '@tanstack/svelte-query'
+	import axios from 'axios'
 	import type { PageData } from './$types'
-	import {
-		updateNameSchema,
-		updateUsernameSchema,
-		type UpdateNameSchema,
-		type UpdateUsernameSchema,
-	} from '$lib/validations/zod'
-	import { ZodError } from 'zod'
 	import { invalidateAll } from '$app/navigation'
 
 	export let data: PageData
@@ -18,137 +22,88 @@
 	let username = data.auth.user.username
 
 	export const updateName = createMutation<MessageResponse, AxiosApiError, UpdateNameBody>({
-	mutationFn: (data) => axios.put<MessageResponse>('/user/name', data).then((res) => res.data),
-	onError: onError(toastStore),
-	onSuccess(_, variables) {
-		toastStore.trigger({
-			message: 'Name updated',
-			background: 'variant-filled-success',
-			autohide: true,
-			timeout: 4000,
-		})
-	},
-})
+		mutationFn: (data) => axios.put<MessageResponse>('/user/name', data).then((res) => res.data),
+		onError: onError(toastStore),
+		async onSuccess(_, variables) {
+			toastStore.trigger({
+				message: 'Name updated',
+				background: 'variant-filled-success',
+				autohide: true,
+				timeout: 4000,
+			})
+			await invalidateAll()
+		},
+	})
 
-export const updateUsername = createMutation<MessageResponse, AxiosApiError, UpdateUsernameBody>({
-	mutationFn: (data) => axios.put<MessageResponse>('/user/username', data).then((res) => res.data),
-	onError: onError(toastStore),
-	onSuccess(_, variables) {
-		toastStore.trigger({
-			message: 'Username updated',
-			background: 'variant-filled-success',
-			autohide: true,
-			timeout: 4000,
-		})
-	},
-})
+	export const updateUsername = createMutation<MessageResponse, AxiosApiError, UpdateUsernameBody>({
+		mutationFn: (data) =>
+			axios.put<MessageResponse>('/user/username', data).then((res) => res.data),
+		onError: onError(toastStore),
+		async onSuccess(_, variables) {
+			toastStore.trigger({
+				message: 'Username updated',
+				background: 'variant-filled-success',
+				autohide: true,
+				timeout: 4000,
+			})
+			await invalidateAll()
+		},
+	})
 
-export const updateAvatar = createMutation<MessageResponse, AxiosApiError, UpdateAvatarBody>({
-	mutationFn: (data) => {
-		const formData = new FormData()
-		formData.append('file', data.file)
-		return axios.put<MessageResponse>('/user/avatar', formData).then((res) => res.data)
-	},
-	onError: onError(toastStore),
-	onSuccess(_, variables) {
-		toastStore.trigger({
-			message: 'Avatar updated',
-			background: 'variant-filled-success',
-			autohide: true,
-			timeout: 4000,
-		})
-	},
-})
+	export const updateAvatar = createMutation<MessageResponse, AxiosApiError, UpdateAvatarBody>({
+		mutationFn: (data) => {
+			const formData = new FormData()
+			formData.append('file', data.file)
+			return axios.put<MessageResponse>('/user/avatar', formData).then((res) => res.data)
+		},
+		onError: onError(toastStore),
+		onSuccess(_, variables) {
+			toastStore.trigger({
+				message: 'Avatar updated',
+				background: 'variant-filled-success',
+				autohide: true,
+				timeout: 4000,
+			})
+		},
+	})
 
 	$: disabled = name === data.auth.user.name && username === data.auth.user.username
 
+	$: loading = $updateUsername.isLoading || $updateName.isLoading || $updateAvatar.isLoading
+
 	async function handleSubmit() {
-		let updates = 0
+		if (username !== data.auth.user.username) {
+			;(() => {
+				const result = updateUsernameSchema.safeParse({ username })
+
+				if (!result.success) {
+					toastStore.trigger({
+						message: result.error.errors[0].message,
+						background: 'variant-filled-warning',
+						autohide: true,
+						timeout: 4000,
+					})
+					return
+				}
+				$updateUsername.mutate(result.data)
+			})()
+		}
 
 		if (name !== data.auth.user.name) {
-			loading = true
-			let data: UpdateNameSchema
-			try {
-				data = updateNameSchema.parse({ name })
-			} catch (err) {
-				if (err instanceof ZodError) {
+			;(() => {
+				const result = updateNameSchema.safeParse({ name })
+
+				if (!result.success) {
 					toastStore.trigger({
-						message: err.errors[0].message,
+						message: result.error.errors[0].message,
 						background: 'variant-filled-warning',
 						autohide: true,
 						timeout: 4000,
 					})
+					return
 				}
-				loading = false
-				return
-			}
-
-			try {
-				await UserUpdateName(data)
-
-				toastStore.trigger({
-					message: 'Name updated',
-					background: 'variant-filled-success',
-					autohide: true,
-					timeout: 4000,
-				})
-				updates++
-			} catch (err) {
-				toastStore.trigger({
-					message: (err as any).response.data.message,
-					background: 'variant-filled-warning',
-					autohide: true,
-					timeout: 4000,
-				})
-			} finally {
-				loading = false
-			}
-		}
-
-		if (username !== data.auth.user.username) {
-			loading = true
-			let data: UpdateUsernameSchema
-			try {
-				data = updateUsernameSchema.parse({ username })
-			} catch (err) {
-				if (err instanceof ZodError) {
-					toastStore.trigger({
-						message: err.errors[0].message,
-						background: 'variant-filled-warning',
-						autohide: true,
-						timeout: 4000,
-					})
-				}
-				loading = false
-				return
-			}
-
-			try {
-				await UserUpdateUsername(data)
-
-				toastStore.trigger({
-					message: 'Username updated',
-					background: 'variant-filled-success',
-					autohide: true,
-					timeout: 4000,
-				})
-				updates++
-			} catch (err) {
-				toastStore.trigger({
-					message: (err as any).response.data.message,
-					background: 'variant-filled-warning',
-					autohide: true,
-					timeout: 4000,
-				})
-			} finally {
-				loading = false
-			}
-		}
-
-		if (updates > 0) {
-			loading = true
-			await invalidateAll()
-			loading = false
+				$updateName.mutate(result.data)
+			})()
 		}
 	}
 </script>
@@ -186,7 +141,7 @@ export const updateAvatar = createMutation<MessageResponse, AxiosApiError, Updat
 					/>
 				</label>
 				<button
-					disabled={loading || disabled}
+					disabled={disabled || loading}
 					type="submit"
 					class="btn variant-filled-primary my-2 w-full">Save</button
 				>
@@ -199,4 +154,4 @@ export const updateAvatar = createMutation<MessageResponse, AxiosApiError, Updat
 			</form>
 		</section>
 	</div>
-</main> -->
+</main>
