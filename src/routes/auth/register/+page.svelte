@@ -1,7 +1,11 @@
 <script lang="ts">
-	import { register } from '$lib/api/auth'
+	import { goto } from '$app/navigation'
+	import { onError } from '$lib/api/common'
+	import type { MessageResponse, AxiosApiError, RegisterBody } from '$lib/api/types'
 	import { registerSchema } from '$lib/validations/zod'
 	import { getToastStore } from '@skeletonlabs/skeleton'
+	import { createMutation } from '@tanstack/svelte-query'
+	import axios from 'axios'
 
 	const toastStore = getToastStore()
 
@@ -9,6 +13,23 @@
 	let username = ''
 	let email = ''
 	let password = ''
+
+	const register = createMutation<MessageResponse, AxiosApiError, RegisterBody>({
+		mutationFn: (data) =>
+			axios.post<MessageResponse>('/auth/register', data).then((res) => res.data),
+		onError: onError(toastStore),
+		onSuccess(_, variables) {
+			toastStore.trigger({
+				message: 'Registered. An OTP is sent to your email for verification',
+				background: 'variant-filled-success',
+				autohide: true,
+				timeout: 4000,
+			})
+
+			sessionStorage.setItem('register_data', JSON.stringify(variables))
+			goto('/auth/verify-email')
+		},
+	})
 
 	async function handleSubmit() {
 		const result = registerSchema.safeParse({ email, name, username, password })

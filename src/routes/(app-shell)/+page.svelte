@@ -3,8 +3,6 @@
 	import PopularPosts from './popular-posts.svelte'
 	import Feed from './feed.svelte'
 	export let data: PageData
-
-	console.log(data)
 </script>
 
 <main class="mt-4">

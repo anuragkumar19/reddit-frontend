@@ -1,12 +1,27 @@
 <script lang="ts">
-	import { login } from '$lib/api/auth'
+	import { onError } from '$lib/api/common'
+	import type { LoginResponse, AxiosApiError, LoginBody } from '$lib/api/types'
 	import { loginSchema } from '$lib/validations/zod'
 	import { getToastStore } from '@skeletonlabs/skeleton'
+	import { createMutation } from '@tanstack/svelte-query'
+	import axios from 'axios'
+	import Cookies from 'js-cookie'
 
 	const toastStore = getToastStore()
 
 	let identifier = ''
 	let password = ''
+
+	export const login = createMutation<LoginResponse, AxiosApiError, LoginBody>({
+		mutationFn: (data) => axios.post<LoginResponse>('/auth/login', data).then((res) => res.data),
+		onError: onError(toastStore),
+		onSuccess(data, variables) {
+			Cookies.set('access_token', data.token, {
+				expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+			})
+			window.location.href = '/'
+		},
+	})
 
 	async function handleSubmit() {
 		const result = loginSchema.safeParse({ identifier, password })

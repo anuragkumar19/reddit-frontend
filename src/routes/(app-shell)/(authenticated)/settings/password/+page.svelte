@@ -1,12 +1,29 @@
 <script lang="ts">
-	import { updatePassword } from '$lib/api/user'
+	import { onError } from '$lib/api/common'
+	import type { MessageResponse, AxiosApiError, UpdatePasswordBody } from '$lib/api/types'
 	import { updatePasswordSchema } from '$lib/validations/zod'
 	import { getToastStore } from '@skeletonlabs/skeleton'
+	import { createMutation } from '@tanstack/svelte-query'
+	import axios from 'axios'
 
 	const toastStore = getToastStore()
 
 	let old_password = ''
 	let new_password = ''
+
+	export const updatePassword = createMutation<MessageResponse, AxiosApiError, UpdatePasswordBody>({
+		mutationFn: (data) =>
+			axios.put<MessageResponse>('/user/password', data).then((res) => res.data),
+		onError: onError(toastStore),
+		onSuccess(_, variables) {
+			toastStore.trigger({
+				message: 'Password updated',
+				background: 'variant-filled-success',
+				autohide: true,
+				timeout: 4000,
+			})
+		},
+	})
 
 	async function handleSubmit() {
 		const result = updatePasswordSchema.safeParse({ old_password, new_password })

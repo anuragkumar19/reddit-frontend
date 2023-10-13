@@ -1,11 +1,32 @@
 <script lang="ts">
-	import { forgotPassword } from '$lib/api/auth'
+	import { goto } from '$app/navigation'
+	import { onError } from '$lib/api/common'
+	import type { MessageResponse, AxiosApiError, ForgotPasswordBody } from '$lib/api/types'
 	import { forgotPasswordSchema } from '$lib/validations/zod'
 	import { getToastStore } from '@skeletonlabs/skeleton'
+	import { createMutation } from '@tanstack/svelte-query'
+	import axios from 'axios'
 
 	const toastStore = getToastStore()
 
 	let email = ''
+
+	export const forgotPassword = createMutation<MessageResponse, AxiosApiError, ForgotPasswordBody>({
+		mutationFn: (data) =>
+			axios.post<MessageResponse>('/auth/forgot-password', data).then((res) => res.data),
+		onError: onError(toastStore),
+		onSuccess(_, variables) {
+			toastStore.trigger({
+				message: 'An OTP is sent to your email.',
+				background: 'variant-filled-success',
+				autohide: true,
+				timeout: 4000,
+			})
+
+			sessionStorage.setItem('forgot_password_email', variables.email)
+			goto('/auth/reset-password')
+		},
+	})
 
 	async function handleSubmit() {
 		const result = forgotPasswordSchema.safeParse({ email })

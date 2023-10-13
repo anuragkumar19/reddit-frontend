@@ -1,13 +1,13 @@
-import { getToastStore } from '@skeletonlabs/skeleton'
+import type { ToastStore } from '@skeletonlabs/skeleton'
 import type { AxiosApiError } from './types'
 
-const toastStore = getToastStore()
-
-export function onError(err: AxiosApiError) {
-	toastStore.trigger({
-		message: err.response!.data.message,
-		background: 'variant-filled-warning',
-		autohide: true,
-		timeout: 4000,
-	})
+export function onError(toastStore: ToastStore) {
+	return function (err: AxiosApiError) {
+		toastStore.trigger({
+			message: err.response!.data.message,
+			background: 'variant-filled-warning',
+			autohide: true,
+			timeout: 4000,
+		})
+	}
 }

@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
-	import { verifyEmail } from '$lib/api/auth'
+	import { onError } from '$lib/api/common'
+	import type { MessageResponse, AxiosApiError, VerifyEmailBody } from '$lib/api/types'
 	import { registerSchema, verifyEmailSchema } from '$lib/validations/zod'
 	import { getToastStore } from '@skeletonlabs/skeleton'
+	import { createMutation } from '@tanstack/svelte-query'
+	import axios from 'axios'
 	import { onMount } from 'svelte'
 
 	const toastStore = getToastStore()
@@ -30,6 +33,23 @@
 		} catch (err) {
 			goto('/auth/register')
 		}
+	})
+
+	export const verifyEmail = createMutation<MessageResponse, AxiosApiError, VerifyEmailBody>({
+		mutationFn: (data) =>
+			axios.post<MessageResponse>('/auth/verify-email', data).then((res) => res.data),
+		onError: onError(toastStore),
+		onSuccess(_, variables) {
+			toastStore.trigger({
+				message: 'Verified. Now you can login',
+				background: 'variant-filled-success',
+				autohide: true,
+				timeout: 4000,
+			})
+
+			sessionStorage.removeItem('register_data')
+			goto('/auth/login')
+		},
 	})
 
 	async function handleSubmit() {

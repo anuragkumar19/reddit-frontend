@@ -17,6 +17,49 @@
 	let name = data.auth.user.name
 	let username = data.auth.user.username
 
+	export const updateName = createMutation<MessageResponse, AxiosApiError, UpdateNameBody>({
+	mutationFn: (data) => axios.put<MessageResponse>('/user/name', data).then((res) => res.data),
+	onError: onError(toastStore),
+	onSuccess(_, variables) {
+		toastStore.trigger({
+			message: 'Name updated',
+			background: 'variant-filled-success',
+			autohide: true,
+			timeout: 4000,
+		})
+	},
+})
+
+export const updateUsername = createMutation<MessageResponse, AxiosApiError, UpdateUsernameBody>({
+	mutationFn: (data) => axios.put<MessageResponse>('/user/username', data).then((res) => res.data),
+	onError: onError(toastStore),
+	onSuccess(_, variables) {
+		toastStore.trigger({
+			message: 'Username updated',
+			background: 'variant-filled-success',
+			autohide: true,
+			timeout: 4000,
+		})
+	},
+})
+
+export const updateAvatar = createMutation<MessageResponse, AxiosApiError, UpdateAvatarBody>({
+	mutationFn: (data) => {
+		const formData = new FormData()
+		formData.append('file', data.file)
+		return axios.put<MessageResponse>('/user/avatar', formData).then((res) => res.data)
+	},
+	onError: onError(toastStore),
+	onSuccess(_, variables) {
+		toastStore.trigger({
+			message: 'Avatar updated',
+			background: 'variant-filled-success',
+			autohide: true,
+			timeout: 4000,
+		})
+	},
+})
+
 	$: disabled = name === data.auth.user.name && username === data.auth.user.username
 
 	async function handleSubmit() {

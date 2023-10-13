@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
-	import { resetPassword } from '$lib/api/auth'
+	import { onError } from '$lib/api/common'
+	import type { MessageResponse, AxiosApiError, ResetPasswordBody } from '$lib/api/types'
 	import { forgotPasswordSchema, resetPasswordSchema } from '$lib/validations/zod'
 	import { getToastStore } from '@skeletonlabs/skeleton'
+	import { createMutation } from '@tanstack/svelte-query'
+	import axios from 'axios'
 	import { onMount } from 'svelte'
 
 	const toastStore = getToastStore()
@@ -24,6 +27,23 @@
 		} catch (err) {
 			goto('/auth/forgot-password')
 		}
+	})
+
+	export const resetPassword = createMutation<MessageResponse, AxiosApiError, ResetPasswordBody>({
+		mutationFn: (data) =>
+			axios.post<MessageResponse>('/auth/reset-password', data).then((res) => res.data),
+		onError: onError(toastStore),
+		onSuccess(_, variables) {
+			toastStore.trigger({
+				message: 'Password reset successful. Now you can login',
+				background: 'variant-filled-success',
+				autohide: true,
+				timeout: 4000,
+			})
+
+			sessionStorage.removeItem('forgot_password_email')
+			goto('/auth/login')
+		},
 	})
 
 	async function handleSubmit() {
