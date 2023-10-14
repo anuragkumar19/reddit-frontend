@@ -105,4 +105,32 @@ export const updateSubredditAboutSchema = z.object({
 		.trim()
 		.max(500, { message: 'About must not be greater than 500 characters' }),
 })
-export type UpdateSUpdateSubredditAbout = z.infer<typeof updateSubredditAboutSchema>
+export type UpdateSubredditAboutSchema = z.infer<typeof updateSubredditAboutSchema>
+
+export const createTextPostSchema = z.object({
+	title: zodString('Title', true).trim().max(50),
+	text: zodString('Text', true).trim().max(2000),
+})
+export type CreateTextPostSchema = z.infer<typeof createTextPostSchema>
+
+export const createLinkPostSchema = z.object({
+	title: zodString('Title', true)
+		.trim()
+		.max(50, { message: 'Title must be not longer than 50 characters' }),
+	text: zodString('Text', true)
+		.trim()
+		.max(2000, { message: 'Text must not be longer than 2000 characters' }),
+	link: zodString('Link', true).url({ message: 'Link must be valid url' }),
+})
+
+export type CreateLinkPostSchema = z.infer<typeof createLinkPostSchema>
+
+export const createMediaPostSchema = z.object({
+	title: zodString('Title', true)
+		.trim()
+		.max(50, { message: 'Title must be not longer than 50 characters' }),
+	text: zodString('Text', false)
+		.trim()
+		.max(2000, { message: 'Text must not be longer than 2000 characters' }),
+})
+export type CreateMediaPostSchema = z.infer<typeof createMediaPostSchema>

@@ -52,5 +52,7 @@
 			</section>
 		</div>
 	{/if}
-	<button class="btn variant-outline-primary mt-8">Create a Post</button>
+	<a href="/r/{subreddit.name}/create-post" class="btn variant-outline-primary mt-8"
+		>Create a Post</a
+	>
 </main>
