@@ -87,3 +87,22 @@ export const updatePasswordSchema = z.object({
 	new_password: password,
 })
 export type UpdatePasswordSchema = z.infer<typeof updatePasswordSchema>
+
+export const createSubredditSchema = z.object({
+	name: username,
+})
+export type CreateSubredditSchema = z.infer<typeof createSubredditSchema>
+
+export const updateSubredditTitleSchema = z.object({
+	title: zodString('Title', false)
+		.trim()
+		.max(30, { message: 'Title must not be greater than 30 characters' }),
+})
+export type UpdateSubredditTitleSchema = z.infer<typeof updateSubredditTitleSchema>
+
+export const updateSubredditAboutSchema = z.object({
+	about: zodString('About', false)
+		.trim()
+		.max(500, { message: 'About must not be greater than 500 characters' }),
+})
+export type UpdateSUpdateSubredditAbout = z.infer<typeof updateSubredditAboutSchema>

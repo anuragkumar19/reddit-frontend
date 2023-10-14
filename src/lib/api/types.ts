@@ -110,8 +110,16 @@ export interface CreateSubredditBody {
 	name: string
 }
 
+export interface CreateSubredditResponse {
+	id: number
+}
+
 export interface UpdateSubredditTitleBody {
 	title: string
+}
+
+export interface UpdateSubredditAboutBody {
+	about: string
 }
 
 export interface AddTextPostToASubredditBody {
