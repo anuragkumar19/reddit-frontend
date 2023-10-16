@@ -7,6 +7,9 @@
 	$: posts = data.posts
 </script>
 
+<svelte:head>
+	<title>Reddit</title>
+</svelte:head>
 <main class="mt-4">
 	<section class="my-4">
 		<Posts {posts} />
