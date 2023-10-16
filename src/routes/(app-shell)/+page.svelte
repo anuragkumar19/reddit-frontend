@@ -1,14 +1,26 @@
 <script lang="ts">
 	import type { PageData } from './$types'
-	import PopularPosts from './popular-posts.svelte'
-	import Feed from './feed.svelte'
+	import Posts from './posts.svelte'
+	import { goto } from '$app/navigation'
 	export let data: PageData
+
+	$: posts = data.posts
 </script>
 
 <main class="mt-4">
-	{#if data.auth == null}
-		<PopularPosts />
-	{:else}
-		<Feed />
-	{/if}
+	<section class="my-4">
+		<Posts {posts} />
+		<div class="mt-4">
+			{#if data.page > 1}
+				<button class="btn variant-outline-primary" on:click={() => goto(`?page=${data.page - 1}`)}
+					>Previous</button
+				>
+			{/if}
+			{#if posts.length === 15}
+				<button class="btn variant-outline-primary" on:click={() => goto(`?page=${data.page + 1}`)}
+					>Next</button
+				>
+			{/if}
+		</div>
+	</section>
 </main>

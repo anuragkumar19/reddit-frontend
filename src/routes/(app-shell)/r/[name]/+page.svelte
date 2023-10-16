@@ -1,26 +1,14 @@
 <script lang="ts">
+	import { goto } from '$app/navigation'
 	import { Avatar } from '@skeletonlabs/skeleton'
-	import type { PageData } from './$types'
-	import { createQuery } from '@tanstack/svelte-query'
-	import type { AxiosApiError, GetSubredditByNameResponse } from '$lib/api/types'
-	import axios from 'axios'
+	import Posts from '../../posts.svelte'
 	import JoinButton from '../join-button.svelte'
+	import type { PageData } from './$types'
 
 	export let data: PageData
 
-	const subredditQuery = createQuery<GetSubredditByNameResponse, AxiosApiError>({
-		queryFn: () =>
-			axios.get<GetSubredditByNameResponse>(`/r/${data.subreddit.id}`).then((res) => res.data),
-		queryKey: [`r/${data.subreddit.id}`],
-		initialData: {
-			subreddit: data.subreddit,
-		},
-		refetchOnMount: false,
-		refetchOnReconnect: false,
-		refetchOnWindowFocus: false,
-	})
-
-	$: subreddit = $subredditQuery.data.subreddit
+	$: posts = data.posts
+	$: subreddit = data.subreddit
 </script>
 
 <svelte:head>
@@ -34,10 +22,12 @@
 		<Avatar src={subreddit.avatar} width="w-16" rounded="rounded-full" />
 		<div class="flex items-center justify-between gap-4">
 			<h3 class="h3">r/{subreddit.name}</h3>
-			<JoinButton {subreddit} auth={data.auth} />
+			<JoinButton {subreddit} />
 			{#if subreddit.creator_id === data.auth?.user.id}
 				<a href={`/r/${subreddit.name}/edit`} class="btn variant-outline-tertiary btn-sm">Edit</a>
 			{/if}
+			<span>{subreddit.member_count} members</span>
+			<span>Since {new Date(subreddit.created_at).toLocaleDateString()}</span>
 		</div>
 	</div>
 	{#if subreddit.about || subreddit.title}
@@ -55,4 +45,20 @@
 	<a href="/r/{subreddit.name}/create-post" class="btn variant-outline-primary mt-8"
 		>Create a Post</a
 	>
+
+	<section class="my-4">
+		<Posts {posts} />
+		<div class="mt-4">
+			{#if data.page > 1}
+				<button class="btn variant-outline-primary" on:click={() => goto(`?page=${data.page - 1}`)}
+					>Previous</button
+				>
+			{/if}
+			{#if posts.length === 10}
+				<button class="btn variant-outline-primary" on:click={() => goto(`?page=${data.page + 1}`)}
+					>Next</button
+				>
+			{/if}
+		</div>
+	</section>
 </main>

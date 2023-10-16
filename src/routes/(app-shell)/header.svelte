@@ -1,7 +1,9 @@
 <script lang="ts">
 	import type { UserMeResponse } from '$lib/api/types'
 	export let auth: { accessToken: string; user: UserMeResponse } | null
-	import { AppBar, Avatar, LightSwitch } from '@skeletonlabs/skeleton'
+	import { AppBar, Avatar, LightSwitch, getModalStore } from '@skeletonlabs/skeleton'
+
+	const modalStore = getModalStore()
 </script>
 
 <AppBar gridColumns="grid-cols-3" slotDefault="place-self-center" slotTrail="place-content-end">
@@ -16,7 +18,16 @@
 		</a>
 	</svelte:fragment>
 	<div>
-		<input type="text" class="input" placeholder="Search reddit" />
+		<input
+			type="text"
+			class="input"
+			placeholder="Search reddit"
+			on:focus={() =>
+				modalStore.trigger({
+					type: 'component',
+					component: 'searchModal',
+				})}
+		/>
 	</div>
 	<svelte:fragment slot="trail">
 		<div class="flex gap-2 items-center">

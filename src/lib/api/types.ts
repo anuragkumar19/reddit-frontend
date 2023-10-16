@@ -41,7 +41,7 @@ export interface VoteBody {
 	down: boolean
 }
 
-export interface CommentBody {
+export interface ReplyBody {
 	content: string
 }
 
@@ -225,6 +225,14 @@ export interface GetUsersPostsResponse {
 	posts: Post[]
 }
 
+export interface GetFeedPostsResponse {
+	posts: Post[]
+}
+
+export interface GetTrendingPostsResponse {
+	posts: Post[]
+}
+
 export interface GetUsersRepliesResponse {
 	replies: Reply[]
 }
@@ -238,4 +246,8 @@ interface UserSearchResult {
 
 export interface SearchUserResponse {
 	users: UserSearchResult[]
+}
+
+export interface TopSubredditResponse {
+	items: SearchResultSubreddit[]
 }

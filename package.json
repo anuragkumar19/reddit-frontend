@@ -36,6 +36,7 @@
 		"@tanstack/svelte-query": "^4.36.1",
 		"axios": "^1.5.1",
 		"js-cookie": "^3.0.5",
+		"moment": "^2.29.4",
 		"zod": "^3.22.4"
 	}
 }

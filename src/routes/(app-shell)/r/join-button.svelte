@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { goto } from '$app/navigation'
+	import { goto, invalidate, invalidateAll } from '$app/navigation'
+	import { page } from '$app/stores'
 	import { onError } from '$lib/api/common'
 	import type { AxiosApiError, MessageResponse, UserMeResponse } from '$lib/api/types'
 	import { getToastStore } from '@skeletonlabs/skeleton'
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query'
 	import axios from 'axios'
 
-	export let subreddit: { id: number; is_joined: boolean }
-	export let auth: { accessToken: string; user: UserMeResponse } | null
+	export let subreddit: { id: number; is_joined: boolean; name: string }
 
 	const toastStore = getToastStore()
 	const queryClient = useQueryClient()
@@ -24,7 +24,9 @@
 				timeout: 4000,
 			})
 
+			await invalidateAll()
 			await queryClient.invalidateQueries({ queryKey: [`r/${subreddit.id}`] })
+			await queryClient.invalidateQueries({ queryKey: ['top-subreddit'] })
 		},
 	})
 
@@ -40,7 +42,9 @@
 				timeout: 4000,
 			})
 
+			await invalidateAll()
 			await queryClient.invalidateQueries({ queryKey: [`r/${subreddit.id}`] })
+			await queryClient.invalidateQueries({ queryKey: ['top-subreddit'] })
 		},
 	})
 
@@ -59,6 +63,7 @@
 		disabled={loading}
 		class="btn variant-filled-primary btn-sm"
 		on:click={() =>
-			auth ? $join.mutate() : goto(`/auth/login?redirect=${window.location.pathname}`)}>Join</button
+			$page.data.auth ? $join.mutate() : goto(`/auth/login?redirect=${window.location.pathname}`)}
+		>Join</button
 	>
 {/if}

@@ -134,3 +134,10 @@ export const createMediaPostSchema = z.object({
 		.max(2000, { message: 'Text must not be longer than 2000 characters' }),
 })
 export type CreateMediaPostSchema = z.infer<typeof createMediaPostSchema>
+
+export const createReplySchema = z.object({
+	content: zodString('Text', true)
+		.trim()
+		.max(500, { message: 'Text must not be longer that 500 characters' }),
+})
+export type CreateReplySchema = z.infer<typeof createReplySchema>

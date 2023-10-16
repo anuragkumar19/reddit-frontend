@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation'
+	import { goto, invalidateAll } from '$app/navigation'
 	import { onError } from '$lib/api/common'
 	import type {
 		AddLinkPostToASubredditBody,
@@ -34,21 +34,19 @@
 	const toastStore = getToastStore()
 	const queryClient = useQueryClient()
 
-	const subredditQuery = createQuery<GetSubredditByNameResponse, AxiosApiError>({
-		queryFn: () =>
-			axios.get<GetSubredditByNameResponse>(`/r/${data.subreddit.id}`).then((res) => res.data),
-		queryKey: [`r/${data.subreddit.id}`],
-		initialData: {
-			subreddit: data.subreddit,
-		},
-		refetchOnMount: false,
-		refetchOnReconnect: false,
-		refetchOnWindowFocus: false,
-	})
+	// const subredditQuery = createQuery<GetSubredditByNameResponse, AxiosApiError>({
+	// 	queryFn: () =>
+	// 		axios.get<GetSubredditByNameResponse>(`/r/${data.subreddit.id}`).then((res) => res.data),
+	// 	queryKey: [`r/${data.subreddit.id}`],
+	// 	initialData: {
+	// 		subreddit: data.subreddit,
+	// 	},
+	// 	refetchOnMount: false,
+	// 	refetchOnReconnect: false,
+	// 	refetchOnWindowFocus: false,
+	// })
 
-	$: subreddit = $subredditQuery.data.subreddit
-
-	async function onSuccess(data: AddPostResponse) {
+	async function onSuccess(resData: AddPostResponse) {
 		toastStore.trigger({
 			message: 'Post created. Redirecting...',
 			background: 'variant-filled-success',
@@ -57,9 +55,9 @@
 		})
 
 		await queryClient.invalidateQueries({
-			queryKey: [`r/${$subredditQuery.data.subreddit.id}/posts`],
+			queryKey: [`r/${data.subreddit.id}/posts`],
 		})
-		goto(`/posts/${data.id}`)
+		goto(`/posts/${resData.id}`)
 	}
 
 	const createPost = createMutation<
@@ -69,12 +67,9 @@
 		| { type: 'link'; body: AddLinkPostToASubredditBody }
 		| { type: 'image' | 'video'; body: FormData }
 	>({
-		mutationFn: (data) =>
+		mutationFn: (body) =>
 			axios
-				.post<AddPostResponse>(
-					`/r/${$subredditQuery.data.subreddit.id}/posts/${data.type}`,
-					data.body,
-				)
+				.post<AddPostResponse>(`/r/${data.subreddit.id}/posts/${body.type}`, body.body)
 				.then((res) => res.data),
 		onError: onError(toastStore),
 		onSuccess,
@@ -175,10 +170,10 @@
 </script>
 
 <svelte:head>
-	<title>Create post r/{subreddit.name} | Reddit</title>
+	<title>Create post r/{data.subreddit.name} | Reddit</title>
 </svelte:head>
 <main class="px-4 mt-8">
-	<h2 class="h2">Create post @ r/{subreddit.name}</h2>
+	<h2 class="h2">Create post @ r/{data.subreddit.name}</h2>
 	<form on:submit|preventDefault={handleSubmit}>
 		<label class="label">
 			<span>Title</span>
@@ -223,26 +218,26 @@
 		{/if}
 		{#if select == 'image'}
 			<FileDropzone
-				name="post-{subreddit.name}-image"
+				name="post-{data.subreddit.name}-image"
 				bind:files={images}
 				disabled={$createPost.isLoading}
 			>
 				<svelte:fragment slot="message">Upload an image (Drop or Select)</svelte:fragment>
 			</FileDropzone>
 			{#if imagePreview}
-				<img src={imagePreview} alt="" class="w-100 block mt-4" />
+				<img src={imagePreview} alt="" class="w-full block mt-4" />
 			{/if}
 		{/if}
 		{#if select == 'video'}
 			<FileDropzone
-				name="post-{subreddit.name}-video"
+				name="post-{data.subreddit.name}-video"
 				bind:files={videos}
 				disabled={$createPost.isLoading}
 			>
 				<svelte:fragment slot="message">Upload an video (Drop or Select)</svelte:fragment>
 			</FileDropzone>
 			{#if videoPreview}
-				<video src={videoPreview} class="w-100 block mt-4" controls autoplay muted />
+				<video src={videoPreview} class="w-full block mt-4" controls autoplay muted />
 			{/if}
 		{/if}
 		<button class="btn variant-filled-primary mt-4" type="submit" disabled={$createPost.isLoading}

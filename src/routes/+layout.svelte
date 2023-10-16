@@ -2,10 +2,23 @@
 	import axios from 'axios'
 	import '../app.postcss'
 	import type { LayoutServerData } from './$types'
-	import { Modal, Toast, getToastStore, initializeStores } from '@skeletonlabs/skeleton'
+	import {
+		Modal,
+		Toast,
+		getToastStore,
+		initializeStores,
+		type ModalComponent,
+		ProgressBar,
+	} from '@skeletonlabs/skeleton'
 	import { PUBLIC_BASE_URL } from '$env/static/public'
 	import { browser } from '$app/environment'
 	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query'
+	import SearchModal from './(app-shell)/search-modal.svelte'
+	import { navigating } from '$app/stores'
+
+	const modalRegistry: Record<string, ModalComponent> = {
+		searchModal: { ref: SearchModal },
+	}
 
 	export let data: LayoutServerData
 
@@ -25,7 +38,10 @@
 </script>
 
 <Toast />
-<Modal />
+<Modal components={modalRegistry} />
+{#if $navigating}
+	<ProgressBar height="h-1" class="fixed top-0 z-50" rounded="rounded-none" />
+{/if}
 <QueryClientProvider client={queryClient}>
 	<slot />
 </QueryClientProvider>

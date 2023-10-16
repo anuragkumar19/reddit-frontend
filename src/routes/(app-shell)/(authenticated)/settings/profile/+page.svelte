@@ -8,7 +8,7 @@
 		UpdateUsernameBody,
 	} from '$lib/api/types'
 	import { updateNameSchema, updateUsernameSchema } from '$lib/validations/zod'
-	import { FileButton, getToastStore } from '@skeletonlabs/skeleton'
+	import { Avatar, FileButton, getToastStore } from '@skeletonlabs/skeleton'
 	import { createMutation } from '@tanstack/svelte-query'
 	import axios from 'axios'
 	import type { PageData } from './$types'
@@ -20,6 +20,7 @@
 
 	let name = data.auth.user.name
 	let username = data.auth.user.username
+	let files: FileList | undefined = undefined
 
 	export const updateName = createMutation<MessageResponse, AxiosApiError, UpdateNameBody>({
 		mutationFn: (data) => axios.put<MessageResponse>('/user/name', data).then((res) => res.data),
@@ -106,6 +107,20 @@
 			})()
 		}
 	}
+
+	function handleUpload() {
+		if (!files || files.length == 0 || !files[0].type.startsWith('image')) {
+			toastStore.trigger({
+				message: 'Please select an image',
+				background: 'variant-filled-warning',
+				autohide: true,
+				timeout: 4000,
+			})
+			return
+		}
+
+		$updateAvatar.mutate({ file: files[0] })
+	}
 </script>
 
 <svelte:head>
@@ -149,8 +164,19 @@
 					disabled={loading}
 					name="profile-avatar-update"
 					button="btn variant-filled-secondary"
+					bind:files
 					width="w-full">Upload Avatar</FileButton
 				>
+				{#if files && files.length > 0 && files[0].type.startsWith('image')}
+					<div class="flex justify-center items-center mt-4">
+						<Avatar src={URL.createObjectURL(files[0])} width="w-32" />
+					</div>
+					<button
+						disabled={loading}
+						class="btn variant-filled-primary w-full mt-2"
+						on:click={handleUpload}>Upload</button
+					>
+				{/if}
 			</form>
 		</section>
 	</div>
