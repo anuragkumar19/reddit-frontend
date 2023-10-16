@@ -12,6 +12,7 @@
 	import { createMutation } from '@tanstack/svelte-query'
 	import axios from 'axios'
 	import { onError } from '$lib/api/common'
+	import { goto } from '$app/navigation'
 
 	let time = ''
 
@@ -90,6 +91,11 @@
 	})
 
 	function votePost(down: boolean) {
+		if (!$page.data.auth) {
+			goto('/auth/login')
+			return
+		}
+
 		if (($postAlt.vote === 1 && !down) || ($postAlt.vote === -1 && down)) {
 			$removeVote.mutate()
 			return

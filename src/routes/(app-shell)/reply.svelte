@@ -19,6 +19,7 @@
 	import ReplyBox from './reply-box.svelte'
 	import { onError } from '$lib/api/common'
 	import { writable } from 'svelte/store'
+	import { goto } from '$app/navigation'
 
 	export let reply: GetReplyResponse['reply']
 	$: replyAlt = writable(reply)
@@ -127,6 +128,11 @@
 	}
 
 	function voteReply(down: boolean) {
+		if (!$page.data.auth) {
+			goto('/auth/login')
+			return
+		}
+
 		if (($replyAlt.vote === 1 && !down) || ($replyAlt.vote === -1 && down)) {
 			$removeVote.mutate()
 			return
