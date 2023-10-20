@@ -10,11 +10,15 @@
 	import UserList from './user-list.svelte'
 	import { getModalStore } from '@skeletonlabs/skeleton'
 	import axios, { Axios } from 'axios'
+	import { onNavigate } from '$app/navigation'
 
 	const modalStore = getModalStore()
 
 	export let parent: any
-	parent
+
+	onNavigate(() => {
+		parent.onClose()
+	})
 
 	let q = ''
 

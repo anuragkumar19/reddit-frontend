@@ -2,8 +2,14 @@
 	import type { UserMeResponse } from '$lib/api/types'
 	export let auth: { accessToken: string; user: UserMeResponse } | null
 	import { AppBar, Avatar, LightSwitch, getModalStore } from '@skeletonlabs/skeleton'
+	import Cookies from 'js-cookie'
 
 	const modalStore = getModalStore()
+
+	function handleLogout() {
+		Cookies.remove('access_token')
+		window.location.href = '/'
+	}
 </script>
 
 <AppBar gridColumns="grid-cols-3" slotDefault="place-self-center" slotTrail="place-content-end">
@@ -44,6 +50,7 @@
 						cursor="cursor-pointer"
 					/></a
 				>
+				<button on:click={handleLogout} class="btn btn-sm variant-filled-warning">Logout</button>
 			{/if}
 			<LightSwitch />
 		</div>
